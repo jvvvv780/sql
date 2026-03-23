@@ -1,0 +1,78 @@
+CREATE TABLE alunos (
+    id_aluno SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    turma VARCHAR(10)
+);
+
+CREATE TABLE produtos (
+    id_produto SERIAL  PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    preco DECIMAL(10,2),
+    estoque INT
+);
+
+CREATE TABLE compras (
+    id_compra SERIAL PRIMARY KEY,
+    id_aluno INT,
+    id_produto INT,
+    
+    FOREIGN KEY (id_aluno) REFERENCES alunos(id_aluno),
+    FOREIGN KEY (id_produto) REFERENCES produtos(id_produto)
+);
+
+INSERT INTO alunos (nome, turma) VALUES
+('João', '1A'),
+('Maria', '2B'),
+('Carlos', '1A'),
+('Ana', '3C');
+
+INSERT INTO produtos (nome, preco, estoque) VALUES
+('Coxinha', 5.00, 10),
+('Refrigerante', 4.50, 8),
+('Pastel', 6.00, 0),
+('Suco', 3.50, 5);
+
+INSERT INTO compras (id_aluno, id_produto) VALUES
+(1, 1),
+(1, 2),
+(2, 1),
+(3, 2),
+(3, 4),
+(4, 1);
+
+DELETE FROM produtos
+WHERE estoque = 0;
+
+SELECT a.nome AS aluno, p.nome AS produto
+FROM compras c
+JOIN alunos a ON c.id_aluno = a.id_aluno
+JOIN produtos p ON c.id_produto = p.id_produto;
+
+SELECT nome
+FROM alunos
+WHERE id_aluno IN (
+    SELECT id_aluno
+    FROM compras
+    GROUP BY id_aluno
+    HAVING COUNT(id_produto) > 1
+);
+
+CREATE VIEW compras_alunos AS
+SELECT a.nome AS aluno, p.nome AS produto
+FROM compras c
+JOIN alunos a ON c.id_aluno = a.id_aluno
+JOIN produtos p ON c.id_produto = p.id_produto;
+
+CREATE INDEX idx_nome_aluno
+ON alunos(nome);
+
+START TRANSACTION;
+
+UPDATE produtos
+SET estoque = estoque - 1
+WHERE id_produto = 1;
+
+INSERT INTO compras (id_aluno, id_produto)
+VALUES (1, 1);
+
+COMMIT;
